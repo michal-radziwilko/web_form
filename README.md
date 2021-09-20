@@ -1,3 +1,7 @@
+# Prerequisites
+
+To be able to run this app, after cloning this Github repository run 'npm install' command in the project folder. This command will install all node-modules required to run this app.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

@@ -1,0 +1,80 @@
+:root {
+  --mainWhite: rgb(231, 231, 231);
+  --mainBorderRadius: 0.25rem;
+}
+.Form {
+  margin-top: 20vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.form-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+label {
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--mainWhite);
+  text-transform: capitalize;
+}
+input {
+  margin: 1rem;
+  font-size: 2rem;
+  background-color: var(--mainWhite);
+  border: 1px solid var(--mainWhite);
+  border-radius: var(--mainBorderRadius);
+}
+input:focus {
+  outline: 1px;
+}
+.error {
+  border: 2px solid red;
+  background: url(../../images/error.svg);
+  background-color: var(--mainWhite);
+  background-size: 2rem;
+  background-repeat: no-repeat;
+  background-position: 22rem;
+}
+.success {
+  border: 2px solid rgb(0, 180, 0);
+  background: url(../../images/success.svg);
+  background-color: var(--mainWhite);
+  background-size: 2rem;
+  background-repeat: no-repeat;
+  background-position: 22rem;
+}
+button {
+  margin: 1rem;
+  background-color: rgb(23, 73, 139);
+  color: var(--mainWhite);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: var(--mainBorderRadius);
+  transition: all 0.3s linear;
+  cursor: pointer;
+}
+button:hover {
+  background-color: rgb(35, 106, 199);
+}
+button:disabled {
+  background-color: rgba(35, 106, 199, 0.281);
+  cursor: default;
+}
+.error_msg {
+  color: red;
+}
+.gender_checkbox_group label {
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.gender_checkbox_group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
