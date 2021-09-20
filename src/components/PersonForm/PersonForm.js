@@ -10,6 +10,7 @@ const PersonForm = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState();
   const [isEmailValid, setIsEmailValid] = useState(false);
+  let cancelToken;
   const initialValues = {
     firstName: "",
     surname: "",
@@ -35,8 +36,25 @@ const PersonForm = () => {
         setLoading(true);
         if (value !== email) {
           setEmail(value);
+          //Check if there are any previous pending requests
+          if (typeof cancelToken !== typeof undefined) {
+            cancelToken.cancel("Operation canceled due to new request.");
+          }
+          //Save the cancel token for the current request
+          cancelToken = axios.CancelToken.source();
           try {
-            const response = await axios.get(url);
+            const response = await axios
+              .get(url, {
+                cancelToken: cancelToken.token,
+              })
+              .catch((thrown) => {
+                if (axios.isCancel(thrown)) {
+                  console.log("Request canceled", thrown.message);
+                } else {
+                  return Promise.resolve(false);
+                }
+              });
+            console.log(response);
             if (
               response.data.validation_status &&
               response.data.status === 200
