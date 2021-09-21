@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
@@ -8,9 +8,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import Loader from "../Loader/Loader";
 const PersonForm = () => {
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState();
-  const [isEmailValid, setIsEmailValid] = useState(false);
-  let cancelToken;
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const axiosSource = useRef(null);
+  const newCancelToken = () => {
+    axiosSource.current = axios.CancelToken.source();
+    return axiosSource.current.token;
+  };
   const initialValues = {
     firstName: "",
     surname: "",
@@ -19,9 +23,46 @@ const PersonForm = () => {
     email: "",
   };
   const handleSubmit = (values, { setSubmitting, resetForm }) => {
-    alert(JSON.stringify(values, null, 2));
-    setSubmitting(false);
-    resetForm();
+    if (!emailError) {
+      values.email = email;
+      alert(JSON.stringify(values, null, 2));
+      setSubmitting(false);
+      resetForm();
+      setEmail("");
+      setEmailError("");
+    }
+  };
+  const handleEmailValidation = async (value) => {
+    if (!value) {
+      setEmailError("Required");
+    } else {
+      let url = `/api/email-validator.php?email=${value}`;
+      setLoading(true);
+      //Check if there are any previous pending requests
+      if (axiosSource.current) {
+        axiosSource.current.cancel("Operation canceled due to new request.");
+      }
+      try {
+        //Save the cancel token for the current request
+        const response = await axios.get(url, {
+          cancelToken: newCancelToken(),
+        });
+        if (response.data.validation_status && response.data.status === 200) {
+          setLoading(false);
+          setEmailError("");
+        } else {
+          setLoading(false);
+          setEmailError("Email not valid");
+        }
+      } catch (e) {
+        if (axios.isCancel(e)) {
+        } else {
+          console.log(e);
+          setLoading(false);
+          setEmailError("Email not valid");
+        }
+      }
+    }
   };
   const validationSchema = Yup.object({
     firstName: Yup.string()
@@ -29,58 +70,6 @@ const PersonForm = () => {
       .min(3, "First Name must have more than 2 characters"),
     surname: Yup.string().max(10, "Surname must have less than 11 characters"),
     birthDate: Yup.date().required("Required").nullable(),
-    email: Yup.string()
-      .required("Required")
-      .test("Email valid", "Email not valid", async (value) => {
-        let url = `/api/email-validator.php?email=${value}`;
-        setLoading(true);
-        if (value !== email) {
-          setEmail(value);
-          //Check if there are any previous pending requests
-          if (typeof cancelToken !== typeof undefined) {
-            cancelToken.cancel("Operation canceled due to new request.");
-          }
-          //Save the cancel token for the current request
-          cancelToken = axios.CancelToken.source();
-          try {
-            const response = await axios
-              .get(url, {
-                cancelToken: cancelToken.token,
-              })
-              .catch((thrown) => {
-                if (axios.isCancel(thrown)) {
-                  console.log("Request canceled", thrown.message);
-                } else {
-                  return Promise.resolve(false);
-                }
-              });
-            console.log(response);
-            if (
-              response.data.validation_status &&
-              response.data.status === 200
-            ) {
-              setIsEmailValid(true);
-              setLoading(false);
-              return Promise.resolve(true);
-            } else {
-              setIsEmailValid(false);
-              setLoading(false);
-              return Promise.resolve(false);
-            }
-          } catch (error) {
-            setIsEmailValid(false);
-            setLoading(false);
-            return Promise.resolve(false);
-          }
-        } else {
-          setLoading(false);
-          if (isEmailValid) {
-            return Promise.resolve(true);
-          } else {
-            return Promise.resolve(false);
-          }
-        }
-      }),
   });
 
   return (
@@ -183,36 +172,43 @@ const PersonForm = () => {
             </label>
           </div>
           <label htmlFor="email">email</label>
-          <Field
+          <input
             className={
-              formik.errors.email && formik.touched.email
+              emailError && formik.touched.email
                 ? "error"
-                : !formik.errors.email && formik.touched.email
+                : !emailError && formik.touched.email
                 ? "success"
                 : ""
             }
             type="text"
             id="email"
             name="email"
-            onClick={() => {
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              handleEmailValidation(e.target.value);
+            }}
+            onClick={(e) => {
+              if (!e.target.value) {
+                setEmailError("Required");
+              }
               formik.setFieldTouched("email", true);
             }}
           />
           {loading && <Loader />}
-          {!loading && (
-            <ErrorMessage
-              name="email"
-              className="error_msg"
-              component="div"
-              data-testid="emailError"
-            />
+          {!loading && emailError && (
+            <div name="email" className="error_msg" data-testid="emailError">
+              {emailError}
+            </div>
           )}
           <button
             type="submit"
             disabled={
               !(formik.dirty && formik.isValid) ||
               formik.isSubmitting ||
-              loading
+              loading ||
+              emailError ||
+              !email
             }
           >
             Submit
