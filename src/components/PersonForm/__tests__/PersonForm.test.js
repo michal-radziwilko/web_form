@@ -3,7 +3,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fireEvent } from "@testing-library/dom";
 import PersonForm from "../PersonForm";
+import mockAxios from "axios";
 
+// Mock out all top level functions, such as get, put, delete and post:
 describe("PersonForm", () => {
   test("should render form with all elements visible", async () => {
     render(<PersonForm />);
@@ -243,6 +245,12 @@ describe("PersonForm", () => {
       });
     });
     test("should show error on invalid email", async () => {
+      jest.spyOn(mockAxios, "get").mockResolvedValue({
+        data: {
+          validation_status: false,
+          status: 200,
+        },
+      });
       render(<PersonForm />);
       const inputElement = screen.getByLabelText(/email/i);
       userEvent.type(inputElement, "john");
@@ -254,6 +262,12 @@ describe("PersonForm", () => {
       });
     });
     test("should not show error on valid email", async () => {
+      jest.spyOn(mockAxios, "get").mockResolvedValue({
+        data: {
+          validation_status: true,
+          status: 200,
+        },
+      });
       render(<PersonForm />);
       const inputElement = screen.getByLabelText(/email/i);
       userEvent.type(inputElement, "john@gmail.com");
@@ -263,6 +277,12 @@ describe("PersonForm", () => {
       });
     });
     test("should have 'success' className when input is valid", async () => {
+      jest.spyOn(mockAxios, "get").mockResolvedValue({
+        data: {
+          validation_status: true,
+          status: 200,
+        },
+      });
       render(<PersonForm />);
       const inputElement = screen.getByLabelText(/email/i);
       userEvent.type(inputElement, "John@gmail.com");
@@ -273,6 +293,12 @@ describe("PersonForm", () => {
       });
     });
     test("should have 'error' className when input is not valid", async () => {
+      jest.spyOn(mockAxios, "get").mockResolvedValue({
+        data: {
+          validation_status: false,
+          status: 200,
+        },
+      });
       render(<PersonForm />);
       const inputElement = screen.getByLabelText(/email/i);
       userEvent.type(inputElement, "John");
@@ -302,6 +328,12 @@ describe("PersonForm", () => {
     });
     test("should be enabled when input was changed and form is valid", async () => {
       render(<PersonForm />);
+      jest.spyOn(mockAxios, "get").mockResolvedValue({
+        data: {
+          validation_status: true,
+          status: 200,
+        },
+      });
       userEvent.type(screen.getByLabelText(/first name/i), "John");
       userEvent.type(screen.getByLabelText(/surname/i), "Smith");
       userEvent.type(screen.getByLabelText(/birth date/i), "01/02/2000");
@@ -314,6 +346,12 @@ describe("PersonForm", () => {
     });
     test("should be disabled when input was changed and form is not valid", async () => {
       render(<PersonForm />);
+      jest.spyOn(mockAxios, "get").mockResolvedValue({
+        data: {
+          validation_status: false,
+          status: 200,
+        },
+      });
       userEvent.type(screen.getByLabelText(/first name/i), "Jo");
       userEvent.type(screen.getByLabelText(/surname/i), "Smith");
       userEvent.type(screen.getByLabelText(/birth date/i), "01/02/2000");
